@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables (contains API keys!)
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ChromaDB data (large, auto-generated)
+chroma_data/
+
+# Experiment data (can be regenerated)
+data/experiments/*.json
+data/experiments/*.md
+
+# Extracted images (large, can be regenerated)
+data/images/
+
+# Test PDFs (optional - keep if small)
+# data/*.pdf
+
+# Temporary files
+_*.py
+*.tmp
+
+# Node (if any)
+node_modules/
