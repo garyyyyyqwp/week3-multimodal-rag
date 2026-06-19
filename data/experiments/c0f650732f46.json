@@ -1,0 +1,413 @@
+{
+  "experiment_id": "c0f650732f46",
+  "name": "GenAI认知研究论文 — 多模态Prompt策略对比",
+  "prompt_strategies": [
+    "basic",
+    "fewshot",
+    "cot",
+    "multimodal_step"
+  ],
+  "test_cases": [
+    {
+      "case_id": "e4cacc92",
+      "question": "这项研究的参与者来自哪些学科领域？样本量是多少？使用了什么研究方法？",
+      "reference_answer": "参与者来自物理治疗(PT)、作业治疗(OT)、联合健康(AH)和生物医学工程(BME)四个学科。采用混合方法：定量问卷(Chi-Squared检验、Wilcoxon秩和检验) + 定性访谈。样本量在Table 2和Table 3中列出。",
+      "has_image": false
+    },
+    {
+      "case_id": "eeaf297a",
+      "question": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间有什么关系？具体统计值是什么？",
+      "reference_answer": "存在统计显著的正相关关系。Figure 2显示课程作业中p=0.006, w=0.42, power=0.94；Figure 3显示专业工作中p<0.001, w=0.78。80%有丰富GenAI知识的人对使用感到非常舒适，75%知识较少的人感到非常不舒适。",
+      "has_image": true
+    },
+    {
+      "case_id": "b28049cb",
+      "question": "学生和教师对GenAI用于学术写作的看法有什么主要差异？请引用原文中的具体观点。",
+      "reference_answer": "学生更关注公平性问题（如'对独立完成作业的学生不公平'），教师则强调需要更多培训来正确和道德地使用AI。双方都认为需要改变学术结构。原文中有具体的定性引述支持这些观点。",
+      "has_image": true
+    }
+  ],
+  "created_at": "2026-06-19T15:46:21.519478+00:00",
+  "status": "completed",
+  "results": [
+    {
+      "strategy_name": "basic",
+      "case_id": "e4cacc92",
+      "question": "这项研究的参与者来自哪些学科领域？样本量是多少？使用了什么研究方法？",
+      "answer": "这项研究的参与者来自以下学科领域：物理治疗、职业治疗、辅助健康和生物医学工程。样本量是131个独特响应，其中10个因不完整而被移除【T1】。\n\n研究使用了定量分析和定性分析相结合的方法。定量分析使用了SPSS软件进行统计分析，包括计数和百分比计算，以及卡方检验【T2】。定性分析则通过收集和分类参与者对通用人工智能在大学课程作业中使用的看法和观点【T1】。",
+      "reference_answer": "参与者来自物理治疗(PT)、作业治疗(OT)、联合健康(AH)和生物医学工程(BME)四个学科。采用混合方法：定量问卷(Chi-Squared检验、Wilcoxon秩和检验) + 定性访谈。样本量在Table 2和Table 3中列出。",
+      "latency_seconds": 11.792,
+      "token_breakdown": {
+        "total_tokens": 3384,
+        "total_input_tokens": 3194,
+        "completion_tokens": 190,
+        "image_count": 0,
+        "input_cost": 0.000319,
+        "output_cost": 1.9e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000338
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 1,
+        "completeness": 4,
+        "conciseness": 4,
+        "reasoning": "事实准确性方面，AI的回答与参考资料一致，但未提及样本量在Table 2和Table 3中列出这一细节。图文关联度方面，AI的回答未利用图片资料。完整性方面，AI的回答覆盖了参考答案中的关键信息点。简洁性方面，AI的回答较为精炼。",
+        "total_score": 3.25
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "basic",
+      "case_id": "eeaf297a",
+      "question": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间有什么关系？具体统计值是什么？",
+      "answer": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间存在显著关系。具体统计值为p = 0.006，这意味着在统计学上这一关系是显著的【T3】。",
+      "reference_answer": "存在统计显著的正相关关系。Figure 2显示课程作业中p=0.006, w=0.42, power=0.94；Figure 3显示专业工作中p<0.001, w=0.78。80%有丰富GenAI知识的人对使用感到非常舒适，75%知识较少的人感到非常不舒适。",
+      "latency_seconds": 7.926,
+      "token_breakdown": {
+        "total_tokens": 3229,
+        "total_input_tokens": 3153,
+        "completion_tokens": 76,
+        "image_count": 0,
+        "input_cost": 0.000315,
+        "output_cost": 8e-06,
+        "image_cost": 0.0,
+        "total_cost": 0.000323
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 1,
+        "completeness": 3,
+        "conciseness": 5,
+        "reasoning": "回答正确地引用了参考资料中的统计值，但未提及所有关键信息点，如Figure 3中的p值和w值。未利用图片资料。回答简洁明了。",
+        "total_score": 3.15
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "basic",
+      "case_id": "b28049cb",
+      "question": "学生和教师对GenAI用于学术写作的看法有什么主要差异？请引用原文中的具体观点。",
+      "answer": "学生和教师对GenAI用于学术写作的看法存在一些主要差异：\n\n1. 学生认为GenAI在学术写作中有助于生成新想法、校对和提供反馈，同时能提高个性化或“定制”的学习体验。例如，一位学生表示：“AI...提供个性化的学习体验。”【T2】\n2. 教师则更关注GenAI在课程教学和教学方法中的应用，认为它有助于提高学习效率和促进知识从基础到创新知识的快速过渡。一位教师表示：“使用AI工具可以减少预工作的时间，并更快地启动创造力。”【T2】\n\n此外，教师对学生过度依赖GenAI减少批判性思维、师生关系恶化以及抄袭的担忧更明显。一位生物医学工程专业的学生提到：“这（使用GenAI）会在学生和教师之间造成怀疑。”【T2】\n\n总的来说，学生对GenAI在学术写作中的应用更关注其辅助性和个性化，而教师则更关注其在教学和课程设计中的应用及其潜在问题。",
+      "reference_answer": "学生更关注公平性问题（如'对独立完成作业的学生不公平'），教师则强调需要更多培训来正确和道德地使用AI。双方都认为需要改变学术结构。原文中有具体的定性引述支持这些观点。",
+      "latency_seconds": 16.289,
+      "token_breakdown": {
+        "total_tokens": 3492,
+        "total_input_tokens": 3110,
+        "completion_tokens": 382,
+        "image_count": 0,
+        "input_cost": 0.000311,
+        "output_cost": 3.8e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000349
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 3,
+        "completeness": 4,
+        "conciseness": 4,
+        "reasoning": "回答中事实准确性较高，引用了原文中的具体观点，但未利用图片资料。完整性较好，覆盖了参考答案中的关键信息点。简洁性良好，无无关或冗余内容。",
+        "total_score": 3.75
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "fewshot",
+      "case_id": "e4cacc92",
+      "question": "这项研究的参与者来自哪些学科领域？样本量是多少？使用了什么研究方法？",
+      "answer": "参与者来自以下学科领域：物理治疗、职业治疗、联合健康和生物医学工程【T1】。样本量为131个有效响应【T1】。研究方法包括定性和定量分析，其中定量分析使用了SPSS软件进行统计计算【T2】。图片资料[F1]展示了“完成大学课程作业”的过程，涉及通用人工智能增强学习和通用人工智能在完成作业中的作用【F1】。",
+      "reference_answer": "参与者来自物理治疗(PT)、作业治疗(OT)、联合健康(AH)和生物医学工程(BME)四个学科。采用混合方法：定量问卷(Chi-Squared检验、Wilcoxon秩和检验) + 定性访谈。样本量在Table 2和Table 3中列出。",
+      "latency_seconds": 11.085,
+      "token_breakdown": {
+        "total_tokens": 3353,
+        "total_input_tokens": 3194,
+        "completion_tokens": 159,
+        "image_count": 0,
+        "input_cost": 0.000319,
+        "output_cost": 1.6e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000335
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 1,
+        "completeness": 3,
+        "conciseness": 4,
+        "reasoning": "事实准确性方面，AI的回答与参考资料一致，但未提及样本量在Table 2和Table 3中列出这一细节。图文关联度方面，AI未利用图片资料。完整性方面，AI的回答覆盖了关键信息点，但未提及定性访谈。简洁性方面，AI的回答较为精炼。",
+        "total_score": 3.0
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "fewshot",
+      "case_id": "eeaf297a",
+      "question": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间有什么关系？具体统计值是什么？",
+      "answer": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间存在显著的正相关关系。具体统计值显示，当被调查者对GenAI有较多了解时（知识水平高），他们在课程中使用GenAI的舒适度也较高。论文中的图2（来源：[T3]）显示，80%有较多GenAI知识的人表示非常舒适地在课程中使用GenAI，而75%表示非常不舒适的人在课程中使用GenAI时知识较少。Cohen's效应大小为0.42，这意味着该关系有较强的效应量。此外，图2的p值为0.006，说明这种关系在统计学上具有显著意义。",
+      "reference_answer": "存在统计显著的正相关关系。Figure 2显示课程作业中p=0.006, w=0.42, power=0.94；Figure 3显示专业工作中p<0.001, w=0.78。80%有丰富GenAI知识的人对使用感到非常舒适，75%知识较少的人感到非常不舒适。",
+      "latency_seconds": 13.182,
+      "token_breakdown": {
+        "total_tokens": 3382,
+        "total_input_tokens": 3153,
+        "completion_tokens": 229,
+        "image_count": 0,
+        "input_cost": 0.000315,
+        "output_cost": 2.3e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000338
+      },
+      "judge_result": {
+        "factual_accuracy": 5,
+        "image_relevance": 1,
+        "completeness": 5,
+        "conciseness": 5,
+        "reasoning": "AI回答中的事实准确性评分高，与参考资料中的数据一致。图文关联度评分为1分，因为回答中没有利用图片信息。完整性评分高，回答涵盖了参考答案中的关键信息点。简洁性评分高，回答没有无关或冗余内容。",
+        "total_score": 4.0
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "fewshot",
+      "case_id": "b28049cb",
+      "question": "学生和教师对GenAI用于学术写作的看法有什么主要差异？请引用原文中的具体观点。",
+      "answer": "学生和教师对GenAI用于学术写作的看法存在一些差异。学生普遍认为GenAI对学术写作有积极作用，例如帮助学生生成新想法、校对和提供反馈，强调其作为个性化学习体验的一部分【T2】。而教师则更加关注GenAI在教学/学习资源扩展和学习效率提升方面的角色，他们提到“AI...提供个性化学习体验”和“使用AI工具减少pre-work时间，更快地激发创造力”【T2】。\n\n同时，教师也提出了一些对GenAI的担忧，例如担心学生过度依赖AI导致批判性思维下降，以及学生和教师关系的不信任问题【T2】。这与学生的一些担忧相呼应，如GenAI可能不规范化或不准确，以及可能降低学生的批判性思维【T2】。\n\n总的来说，学生对GenAI的看法更多侧重于其辅助学习和提高效率的作用，而教师则更多地从教学方法和效率的角度来看待GenAI，同时也表达了对潜在问题的担忧。",
+      "reference_answer": "学生更关注公平性问题（如'对独立完成作业的学生不公平'），教师则强调需要更多培训来正确和道德地使用AI。双方都认为需要改变学术结构。原文中有具体的定性引述支持这些观点。",
+      "latency_seconds": 14.722,
+      "token_breakdown": {
+        "total_tokens": 3498,
+        "total_input_tokens": 3110,
+        "completion_tokens": 388,
+        "image_count": 0,
+        "input_cost": 0.000311,
+        "output_cost": 3.9e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.00035
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 3,
+        "completeness": 4,
+        "conciseness": 4,
+        "reasoning": "回答中事实准确性较高，但未引用原文中的具体观点。图文关联度评3分，因为无图片资料。完整性较好，覆盖了关键信息点。回答简洁，无冗余内容。",
+        "total_score": 3.75
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "cot",
+      "case_id": "e4cacc92",
+      "question": "这项研究的参与者来自哪些学科领域？样本量是多少？使用了什么研究方法？",
+      "answer": "【关键信息】\n- 参与者学科领域：物理治疗（PT）、职业治疗（OT）、辅助健康（AH）、生物医学工程（BME）\n- 样本量：131个独特的响应，10个因不完整而移除\n- 研究方法：定量分析和定性分析（例如，通过SPSS进行统计分析，使用开放式问题进行定性调查）\n\n【分析推理】\n从资料【T1】和【T3】中我们可以看出，研究的参与者主要来自物理治疗（PT）、职业治疗（OT）、辅助健康（AH）和生物医学工程（BME）这四个学科领域。资料【T1】中提到，\"Given that most were students, age and annual income were skewed with 66.9% < 34 years and 57.9% <$38,000 annually.\" 这句话说明了参与者的年龄和年收入分布，但并没有直接提供样本量。然而，资料【T1】和【T3】都提到了131个独特的响应，并从中移除了10个不完整的响应，这意味着有效的样本量为121。\n\n关于研究方法，资料【T2】和【T5】提供了详细的信息。定量分析使用了SPSS软件，对参与者的人口统计学变量（如性别、年龄、种族/民族、年收入、学科、角色、机构规模/类型、学位水平、全职/兼职状态）和百分比（如性别、角色、学位水平、每个学科内的机构类型）进行了计算。此外，还有关于GenAI知识的调查（例如，不知道、一点、很多）、对在大学课程中使用GenAI的舒适度（1=非常不舒服，5=非常舒服）、GenAI对完成大学课程工作的贡献程度（1=显著减少，5=显著增加）、如果使用GenAI写作是否算作弊（1=强烈不同意，5=强烈同意）、GenAI是否增强学习（1=强烈不同意，5=强烈同意）的调查。资料【T5】也提到了使用开放式问题的定性分析，例如收集了关于GenAI在大学课程作业中使用的优势和挑战的回应。\n\n【回答】\n这项研究的参与者主要来自物理治疗（PT）、职业治疗（OT）、辅助健康（AH）和生物医学工程（BME）这四个学科领域。样本量为121，这是在收集了131个独特响应并移除了10个不完整响应后得到的。研究采用了定量分析（如SPSS统计分析和问卷调查）和定性分析（如开放式问题的收集和回答）。",
+      "reference_answer": "参与者来自物理治疗(PT)、作业治疗(OT)、联合健康(AH)和生物医学工程(BME)四个学科。采用混合方法：定量问卷(Chi-Squared检验、Wilcoxon秩和检验) + 定性访谈。样本量在Table 2和Table 3中列出。",
+      "latency_seconds": 38.026,
+      "token_breakdown": {
+        "total_tokens": 4060,
+        "total_input_tokens": 3194,
+        "completion_tokens": 866,
+        "image_count": 0,
+        "input_cost": 0.000319,
+        "output_cost": 8.7e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000406
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 1,
+        "completeness": 4,
+        "conciseness": 4,
+        "reasoning": "事实准确性方面，回答正确地引用了参与者学科领域、样本量和研究方法。图文关联度评1分，因为回答中没有利用图片信息。完整性方面，回答涵盖了参考答案中的关键信息点。简洁性方面，回答没有冗余内容。",
+        "total_score": 3.25
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "cot",
+      "case_id": "eeaf297a",
+      "question": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间有什么关系？具体统计值是什么？",
+      "answer": "【关键信息】\n- 根据图片资料[F2]，p值为0.006，表明结果在统计学上有显著意义。\n- 图表显示，随着对通用人工智能技术（GenAI）的了解程度增加，人们对GenAI在课程学习中使用的舒适度也随之增加。\n\n【分析推理】\n- 从关键信息中可以推断出，GenAI的知识水平与使用舒适度之间存在显著的正相关关系。\n- p值0.006表明这一关系在统计学上具有显著性，意味着我们可以有相当高的信心认为这种关系并非偶然。\n\n【回答】\n根据论文中的图表数据，GenAI知识水平与使用舒适度之间存在显著的正相关关系。具体统计值显示，p值为0.006，表明这种关系在统计学上具有显著性（来源编号：[F2]）。",
+      "reference_answer": "存在统计显著的正相关关系。Figure 2显示课程作业中p=0.006, w=0.42, power=0.94；Figure 3显示专业工作中p<0.001, w=0.78。80%有丰富GenAI知识的人对使用感到非常舒适，75%知识较少的人感到非常不舒适。",
+      "latency_seconds": 11.366,
+      "token_breakdown": {
+        "total_tokens": 3440,
+        "total_input_tokens": 3153,
+        "completion_tokens": 287,
+        "image_count": 0,
+        "input_cost": 0.000315,
+        "output_cost": 2.9e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000344
+      },
+      "judge_result": {
+        "factual_accuracy": 5,
+        "image_relevance": 3,
+        "completeness": 4,
+        "conciseness": 5,
+        "reasoning": "回答准确引用了参考资料中的p值和图表信息，但未提及所有关键信息点，如Figure 3的p值和w值。回答完整地覆盖了关键信息，但未提及所有图表信息，因此完整性评分略低。回答简洁明了，无冗余内容。",
+        "total_score": 4.25
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "cot",
+      "case_id": "b28049cb",
+      "question": "学生和教师对GenAI用于学术写作的看法有什么主要差异？请引用原文中的具体观点。",
+      "answer": "【关键信息】\n1. 学生和教师都认为GenAI在学术写作中是有用的工具，可以生成新想法、校对和提供反馈（来源编号[T2]）。\n2. 学生认为GenAI有助于个性化或定制化的学习体验，而教师则从课程或教学的角度看待GenAI的好处，如提高效率和促进知识的快速过渡（来源编号[T2]）。\n3. 学生对GenAI的担忧集中在它可能是不受监管的、错误的，过度依赖会减少批判性思维，损害师生关系，以及剽窃问题（来源编号[T2]）。\n4. 教师则担心GenAI的误用（如将GenAI的结果作为自己的作品提交）会阻碍“真正的”学习，并指出教师需要调整教学方法来引导适当的GenAI使用（来源编号[T2]）。\n\n【分析推理】\n从上述信息可以看出，学生和教师对GenAI在学术写作中的看法存在一些主要差异。学生更关注GenAI如何促进个性化学习体验，而教师则更关注GenAI在课程和教学中的应用。此外，学生对GenAI的潜在问题（如剽窃和减少批判性思维）表现出更大的担忧，而教师则担心GenAI的误用和它对传统学习方式的潜在影响。\n\n【回答】\n学生和教师对GenAI用于学术写作的看法存在以下主要差异：\n- 学生认为GenAI有助于个性化或定制化的学习体验，而教师则从课程或教学的角度看待GenAI的好处，如提高效率和促进知识的快速过渡（来源编号[T2]）。\n- 学生对GenAI的潜在问题（如剽窃和减少批判性思维）表现出更大的担忧，而教师则担心GenAI的误用和它对传统学习方式的潜在影响（来源编号[T2]）。",
+      "reference_answer": "学生更关注公平性问题（如'对独立完成作业的学生不公平'），教师则强调需要更多培训来正确和道德地使用AI。双方都认为需要改变学术结构。原文中有具体的定性引述支持这些观点。",
+      "latency_seconds": 25.772,
+      "token_breakdown": {
+        "total_tokens": 3759,
+        "total_input_tokens": 3110,
+        "completion_tokens": 649,
+        "image_count": 0,
+        "input_cost": 0.000311,
+        "output_cost": 6.5e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000376
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 1,
+        "completeness": 4,
+        "conciseness": 4,
+        "reasoning": "回答中包含了学生和教师对GenAI在学术写作中的看法的主要差异，引用了原文中的具体观点，但未利用图片资料。",
+        "total_score": 3.25
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "multimodal_step",
+      "case_id": "e4cacc92",
+      "question": "这项研究的参与者来自哪些学科领域？样本量是多少？使用了什么研究方法？",
+      "answer": "【文字信息】\n1. 参与者来自以下学科领域：物理治疗、职业治疗、辅助健康和生物医学工程（T1）。\n2. 收集了131份独特的响应，其中10份因不完整而被移除，因此样本量为121（T1）。\n3. 研究方法包括定量分析，使用SPSS进行统计分析，并包含定性分析，通过开放式问题收集参与者观点（T2、T5）。\n\n【图片信息】\n1. 图片F1展示了“完成大学课程作业”的过程，包括通用人工智能增强学习和通用人工智能有助于完成大学课程作业两个步骤（F1）。\n2. 图片F2显示了学生在课程中使用通用人工智能的舒适度数据，从非常不舒适到非常舒适的分布情况（F2）。\n3. 图片F3包含了三张折线图，分别展示学习曲线、课程完成率和写作作弊倾向与GenAI使用之间的关联（F3）。\n\n【综合分析】\n这项研究涉及来自物理治疗、职业治疗、辅助健康和生物医学工程学科的参与者。样本量总共为121人，这是在移除了10份不完整的响应之后得出的。研究方法结合了定量和定性分析，定量分析使用SPSS进行，包括统计测试来评估不同变量之间的关系，而定性分析则通过开放式问题来收集参与者的观点。研究结果显示，参与者对使用通用人工智能（GenAI）的看法和知识在所提到的生物医学科学学科中是相似的，不论他们自我标识的的人口统计变量如何（T1、T2、T3、T4、T5）。图片资料提供了关于GenAI如何辅助完成大学课程作业的过程（F1），学生在课程中使用GenAI的舒适度分布（F2），以及GenAI使用与学习效果、课程完成率和作弊倾向之间的关联（F3）。",
+      "reference_answer": "参与者来自物理治疗(PT)、作业治疗(OT)、联合健康(AH)和生物医学工程(BME)四个学科。采用混合方法：定量问卷(Chi-Squared检验、Wilcoxon秩和检验) + 定性访谈。样本量在Table 2和Table 3中列出。",
+      "latency_seconds": 32.712,
+      "token_breakdown": {
+        "total_tokens": 3861,
+        "total_input_tokens": 3194,
+        "completion_tokens": 667,
+        "image_count": 0,
+        "input_cost": 0.000319,
+        "output_cost": 6.7e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000386
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 3,
+        "completeness": 4,
+        "conciseness": 4,
+        "reasoning": "AI生成的回答在事实准确性方面表现良好，但未完全利用图片信息。回答涵盖了参考答案中的关键信息点，但略显冗余。",
+        "total_score": 3.75
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "multimodal_step",
+      "case_id": "eeaf297a",
+      "question": "根据论文中的图表数据，GenAI知识水平与使用舒适度之间有什么关系？具体统计值是什么？",
+      "answer": "【文字信息】\n根据论文中的数据，GenAI知识水平与使用舒适度之间存在显著的关系。具体来说，随着GenAI知识的增加，使用GenAI完成课程工作的舒适度也随之增加。具体统计值显示，80%表示对使用GenAI完成课程工作“非常舒适”的受访者拥有显著的GenAI知识，而75%表示对使用GenAI完成课程工作“非常不舒服”的受访者对GenAI知识了解甚少。Cohen's效应大小为0.42，达到了94%的实现功效。此外，有研究表明，使用GenAI完成课程工作的舒适度与对GenAI增强学习的信念之间存在显著相关性（来源编号：T1、T2、T3）。\n\n【图片信息】\n- 图片[F2]显示了一个折线统计图，说明了不同知识水平的人对通用人工智能技术的使用舒适度的变化趋势。根据图片右上角的信息，p值为0.006，这表明结果在统计学上有显著意义。\n\n【综合分析】\n综合文字资料和图片信息，我们可以得出以下结论：GenAI知识水平与使用舒适度之间存在显著的正相关关系。具体来说，如图[F2]所示，随着受访者对GenAI知识的增加，他们对在课程中使用GenAI的舒适度也随之增加。这一发现与论文中的描述一致，其中提到80%对使用GenAI完成课程工作“非常舒适”的受访者拥有显著的GenAI知识，而75%表示对使用GenAI完成课程工作“非常不舒服”的受访者对GenAI知识了解甚少（来源编号：T1、T2、T3、F2）。这些统计结果强调了知识水平对使用舒适度的影响，表明对GenAI有更深入了解的人可能更愿意接受和使用它来辅助学习。",
+      "reference_answer": "存在统计显著的正相关关系。Figure 2显示课程作业中p=0.006, w=0.42, power=0.94；Figure 3显示专业工作中p<0.001, w=0.78。80%有丰富GenAI知识的人对使用感到非常舒适，75%知识较少的人感到非常不舒适。",
+      "latency_seconds": 23.926,
+      "token_breakdown": {
+        "total_tokens": 3782,
+        "total_input_tokens": 3153,
+        "completion_tokens": 629,
+        "image_count": 0,
+        "input_cost": 0.000315,
+        "output_cost": 6.3e-05,
+        "image_cost": 0.0,
+        "total_cost": 0.000378
+      },
+      "judge_result": {
+        "factual_accuracy": 5,
+        "image_relevance": 3,
+        "completeness": 5,
+        "conciseness": 4,
+        "reasoning": "AI生成的回答在事实准确性、完整性和图文关联度方面表现良好，与参考资料一致。回答涵盖了关键信息点，但简洁性方面略有不足，存在一些冗余内容。",
+        "total_score": 4.35
+      },
+      "use_vision": false,
+      "error": ""
+    },
+    {
+      "strategy_name": "multimodal_step",
+      "case_id": "b28049cb",
+      "question": "学生和教师对GenAI用于学术写作的看法有什么主要差异？请引用原文中的具体观点。",
+      "answer": "【文字信息】\n- 学生和教师都认为GenAI在学术写作中是“有用的工具”（来源：[T2]）。\n- 学生认为GenAI可以“帮助生成新想法、校对和提供反馈”（来源：[T2]）。\n- 教师认为学生和教师需要“更多培训，以有效和道德地使用GenAI”（来源：[T2]）。\n- 学生认为GenAI可以提供个性化的学习体验，减少作业时间，更快地激发创造力（来源：[T2]）。\n- 教师认为使用AI工具可以减少作业时间，更快地激发创造力（来源：[T2]）。\n- 学生关注GenAI可能的不规范和/或错误，过度依赖会减少批判性思维，损害师生关系，以及剽窃问题（来源：[T2]）。\n- 教师关注GenAI的潜在误用（例如，将GenAI的结果当作自己的）以及阻碍“真正的学习”，指出教师需要调整教学方法来引导适当的GenAI使用（来源：[T2]）。\n\n【图片信息】\n- 图片[F1]展示了不同学科领域中学位类型的分布和公立与私立机构的分布情况，但未直接涉及学生和教师对GenAI用于学术写作的看法。\n- 图片[F2]展示了从“GenAI的知识”到“在...期间使用GenAI的舒适度”的过程，但未直接涉及学生和教师对GenAI用于学术写作的看法。\n- 图片[F3]展示了学生在课程中使用通用人工智能舒适度的分布情况，但未直接涉及教师对GenAI用于学术写作的看法。\n\n【综合分析】\n学生和教师对GenAI用于学术写作的看法存在一些主要差异。学生普遍认为GenAI是一个有用的工具，可以帮助他们生成新想法、校对和提供反馈，同时减少作业时间，更快地激发创造力。他们关注的主要问题是GenAI可能的不规范和/或错误，过度依赖会减少批判性思维，损害师生关系，以及剽窃问题。\n\n相比之下，教师认为学生和教师需要更多培训，以有效和道德地使用GenAI。他们关注的主要问题是GenAI的潜在误用（例如，将GenAI的结果当作自己的）以及阻碍“真正的学习”，指出教师需要调整教学方法来引导适当的GenAI使用。\n\n这些差异表明，学生和教师对GenAI的看法存在一定的分歧，尤其是在对GenAI使用的道德和伦理问题的看法上。学生更关注GenAI的实用性和便利性，而教师则更关注GenAI的教育价值和潜在风险。这些观点在文献中得到了支持，例如在Tsipov和Grossklags的研究中提到：“尽管没有统计上显著的角色差异，但定性主题出现了。学生和教师认为GenAI（1）对开始学习很有用，（2）适用于扩展教学/学习资源，以及（3）提高学习效率”（来源：[T2]）。",
+      "reference_answer": "学生更关注公平性问题（如'对独立完成作业的学生不公平'），教师则强调需要更多培训来正确和道德地使用AI。双方都认为需要改变学术结构。原文中有具体的定性引述支持这些观点。",
+      "latency_seconds": 39.975,
+      "token_breakdown": {
+        "total_tokens": 4155,
+        "total_input_tokens": 3110,
+        "completion_tokens": 1045,
+        "image_count": 0,
+        "input_cost": 0.000311,
+        "output_cost": 0.000104,
+        "image_cost": 0.0,
+        "total_cost": 0.000416
+      },
+      "judge_result": {
+        "factual_accuracy": 4,
+        "image_relevance": 1,
+        "completeness": 4,
+        "conciseness": 3,
+        "reasoning": "回答中事实准确性较高，但未充分利用图片资料。完整性较好，但简洁性有待提高。",
+        "total_score": 3.1
+      },
+      "use_vision": false,
+      "error": ""
+    }
+  ],
+  "strategy_cost_reports": {
+    "basic": {
+      "strategy_name": "basic",
+      "total_calls": 3,
+      "total_tokens": 10105,
+      "total_input_tokens": 9457,
+      "total_completion_tokens": 648,
+      "total_cost": 0.001,
+      "avg_tokens_per_call": 3368.3,
+      "avg_cost_per_call": 0.000337
+    },
+    "fewshot": {
+      "strategy_name": "fewshot",
+      "total_calls": 3,
+      "total_tokens": 10233,
+      "total_input_tokens": 9457,
+      "total_completion_tokens": 776,
+      "total_cost": 0.001,
+      "avg_tokens_per_call": 3411.0,
+      "avg_cost_per_call": 0.000341
+    },
+    "cot": {
+      "strategy_name": "cot",
+      "total_calls": 3,
+      "total_tokens": 11259,
+      "total_input_tokens": 9457,
+      "total_completion_tokens": 1802,
+      "total_cost": 0.0011,
+      "avg_tokens_per_call": 3753.0,
+      "avg_cost_per_call": 0.000375
+    },
+    "multimodal_step": {
+      "strategy_name": "multimodal_step",
+      "total_calls": 3,
+      "total_tokens": 11798,
+      "total_input_tokens": 9457,
+      "total_completion_tokens": 2341,
+      "total_cost": 0.0012,
+      "avg_tokens_per_call": 3932.7,
+      "avg_cost_per_call": 0.000393
+    }
+  },
+  "total_duration_seconds": 83.05
+}
