@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多模态 RAG + Prompt 策略评估平台</title>
+<style>
+  /* ── Vercel Design System ── */
+  :root {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #141414;
+    --bg-elevated: #1a1a1a;
+    --text-primary: #ededed;
+    --text-secondary: #888888;
+    --text-tertiary: #666666;
+    --accent-blue: #0a72ef;
+    --accent-red: #ff5b4f;
+    --accent-green: #00d684;
+    --accent-amber: #f5a623;
+    --accent-purple: #7928ca;
+    --accent-pink: #eb367f;
+    --border-subtle: rgba(255,255,255,0.08);
+    --border-default: rgba(255,255,255,0.12);
+    --border-strong: rgba(255,255,255,0.20);
+    --shadow-1: 0px 0px 0px 1px rgba(255,255,255,0.06), 0px 2px 8px rgba(0,0,0,0.4);
+    --shadow-2: 0px 0px 0px 1px rgba(255,255,255,0.08), 0px 4px 16px rgba(0,0,0,0.5);
+    --shadow-3: 0px 0px 0px 1px rgba(255,255,255,0.10), 0px 8px 32px rgba(0,0,0,0.6);
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --transition: all 0.15s ease;
+    --font-mono: "Geist Mono","JetBrains Mono","Fira Code","Consolas",monospace;
+    --font-sans: "Geist","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { font-size:16px; -webkit-font-smoothing:antialiased; }
+  body {
+    background:var(--bg-primary); color:var(--text-primary);
+    font-family:var(--font-sans); line-height:1.6;
+    min-height:100vh; font-feature-settings:"liga" 1;
+  }
+
+  /* ── Layout ── */
+  .app-layout { display:flex; min-height:100vh; }
+  .sidebar {
+    width:240px; background:var(--bg-secondary); border-right:1px solid var(--border-subtle);
+    padding:24px 16px; position:fixed; top:0; left:0; bottom:0; z-index:100;
+    display:flex; flex-direction:column;
+  }
+  .sidebar-logo {
+    font-size:14px; font-weight:600; letter-spacing:-0.4px;
+    color:var(--text-primary); margin-bottom:32px; padding:0 8px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .sidebar-logo .icon {
+    width:28px; height:28px; background:var(--accent-blue); border-radius:6px;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+  }
+  .nav-group { margin-bottom:24px; }
+  .nav-group-label {
+    font-size:11px; font-weight:500; color:var(--text-tertiary);
+    text-transform:uppercase; letter-spacing:0.48px; padding:0 8px; margin-bottom:6px;
+  }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:8px; border-radius:var(--radius-sm);
+    color:var(--text-secondary); font-size:14px; cursor:pointer; transition:var(--transition);
+    text-decoration:none; border:none; background:none; width:100%; text-align:left;
+    font-family:var(--font-sans); letter-spacing:-0.08px;
+  }
+  .nav-item:hover { background:var(--bg-tertiary); color:var(--text-primary); }
+  .nav-item.active { background:var(--bg-tertiary); color:var(--text-primary); }
+  .nav-item .badge {
+    margin-left:auto; font-size:10px; padding:1px 6px; border-radius:10px;
+    background:var(--bg-elevated); color:var(--text-secondary);
+  }
+  .nav-footer {
+    margin-top:auto; padding:16px 8px 0; border-top:1px solid var(--border-subtle);
+    font-size:12px; color:var(--text-tertiary);
+  }
+
+  .main { margin-left:240px; flex:1; padding:48px; max-width:1200px; }
+
+  /* ── Typography ── */
+  .page-title { font-size:48px; font-weight:600; letter-spacing:-2.4px; line-height:1.1; margin-bottom:8px; }
+  .page-subtitle { font-size:16px; color:var(--text-secondary); margin-bottom:40px; }
+  .section-title { font-size:20px; font-weight:600; letter-spacing:-0.6px; margin-bottom:20px; }
+  .card-title { font-size:16px; font-weight:600; letter-spacing:-0.4px; margin-bottom:4px; }
+  .mono { font-family:var(--font-mono); font-size:13px; }
+  .label { font-size:12px; font-weight:500; letter-spacing:0.24px; color:var(--text-secondary); text-transform:uppercase; }
+
+  /* ── Cards ── */
+  .card {
+    background:var(--bg-secondary); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-1); padding:24px; margin-bottom:16px;
+    transition:var(--transition);
+  }
+  .card:hover { box-shadow:var(--shadow-2); }
+  .card-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr)); gap:16px; }
+  .card-accent { border-left: 3px solid var(--accent-blue); }
+
+  /* ── Buttons ── */
+  .btn {
+    display:inline-flex; align-items:center; gap:8px; padding:8px 16px;
+    border-radius:var(--radius-sm); font-size:14px; font-weight:500;
+    cursor:pointer; transition:var(--transition); border:none;
+    font-family:var(--font-sans); letter-spacing:-0.08px; white-space:nowrap;
+  }
+  .btn-primary { background:var(--accent-blue); color:#fff; }
+  .btn-primary:hover { filter:brightness(1.15); }
+  .btn-secondary { background:transparent; border:1px solid var(--border-default); color:var(--text-primary); }
+  .btn-secondary:hover { border-color:var(--border-strong); background:var(--bg-tertiary); }
+  .btn-danger { background:transparent; border:1px solid var(--accent-red); color:var(--accent-red); }
+  .btn-danger:hover { background:rgba(255,91,79,0.08); }
+  .btn-ghost { background:transparent; color:var(--text-secondary); }
+  .btn-ghost:hover { background:var(--bg-tertiary); color:var(--text-primary); }
+  .btn:focus-visible { outline:none; box-shadow:0 0 0 2px var(--accent-blue); }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+  /* ── Inputs ── */
+  .input, .textarea, .select {
+    background:var(--bg-tertiary); border:1px solid var(--border-default);
+    border-radius:var(--radius-sm); color:var(--text-primary); font-size:14px;
+    padding:8px 12px; width:100%; transition:var(--transition);
+    font-family:var(--font-sans);
+  }
+  .input:focus, .textarea:focus, .select:focus {
+    outline:none; border-color:var(--accent-blue);
+    box-shadow:0 0 0 2px rgba(10,114,239,0.25);
+  }
+  .input::placeholder, .textarea::placeholder { color:var(--text-tertiary); }
+  .input { height:40px; }
+  .textarea { min-height:100px; resize:vertical; }
+  .form-group { margin-bottom:20px; }
+  .form-label { display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th {
+    font-size:12px; font-weight:500; color:var(--text-secondary);
+    text-transform:uppercase; letter-spacing:0.48px; text-align:left;
+    padding:12px 16px; border-bottom:1px solid var(--border-subtle);
+  }
+  td {
+    padding:12px 16px; font-size:14px; border-bottom:1px solid var(--border-subtle);
+    color:var(--text-primary);
+  }
+  tr:hover td { background:var(--bg-tertiary); }
+  .td-mono { font-family:var(--font-mono); font-size:13px; text-align:right; }
+  .td-mono.left { text-align:left; }
+
+  /* ── Status Badges ── */
+  .badge {
+    display:inline-flex; align-items:center; gap:4px; padding:1px 8px;
+    border-radius:10px; font-size:10px; font-weight:500; text-transform:uppercase;
+    letter-spacing:0.48px;
+  }
+  .badge-success { background:rgba(0,214,132,0.12); color:var(--accent-green); }
+  .badge-running { background:rgba(245,166,35,0.12); color:var(--accent-amber); }
+  .badge-error { background:rgba(255,91,79,0.12); color:var(--accent-red); }
+  .badge-info { background:rgba(10,114,239,0.12); color:var(--accent-blue); }
+  .badge-purple { background:rgba(121,40,202,0.12); color:var(--accent-purple); }
+
+  /* ── Stats Grid ── */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+  .stat-card {
+    background:var(--bg-secondary); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-1); padding:20px;
+  }
+  .stat-value { font-size:32px; font-weight:600; letter-spacing:-1.2px; font-family:var(--font-mono); }
+  .stat-label { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+
+  /* ── Toast ── */
+  .toast-container { position:fixed; top:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+  .toast {
+    background:var(--bg-elevated); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-3); padding:12px 20px; font-size:14px;
+    display:flex; align-items:center; gap:10px; animation:slideIn 0.2s ease;
+    max-width:400px;
+  }
+  .toast-success { border-left:3px solid var(--accent-green); }
+  .toast-error { border-left:3px solid var(--accent-red); }
+  .toast-info { border-left:3px solid var(--accent-blue); }
+  @keyframes slideIn { from{opacity:0;transform:translateX(20px);} to{opacity:1;transform:translateX(0);} }
+
+  /* ── Upload Zone ── */
+  .upload-zone {
+    border:2px dashed var(--border-default); border-radius:var(--radius-lg);
+    padding:48px; text-align:center; cursor:pointer; transition:var(--transition);
+    background:var(--bg-secondary);
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color:var(--accent-blue); background:var(--bg-tertiary);
+  }
+  .upload-icon { font-size:48px; margin-bottom:16px; }
+
+  /* ── Preview ── */
+  .preview-container { display:flex; gap:20px; flex-wrap:wrap; }
+  .preview-image {
+    max-width:200px; max-height:160px; border-radius:var(--radius-sm);
+    object-fit:cover; border:1px solid var(--border-subtle);
+  }
+
+  /* ── Score Bars ── */
+  .score-bar-wrap { display:flex; align-items:center; gap:8px; margin:2px 0; }
+  .score-bar-label { font-size:12px; color:var(--text-secondary); width:70px; text-align:right; }
+  .score-bar-track { flex:1; height:6px; background:var(--bg-tertiary); border-radius:3px; overflow:hidden; }
+  .score-bar-fill { height:100%; border-radius:3px; transition:width 0.3s ease; }
+  .score-bar-val { font-size:12px; font-family:var(--font-mono); color:var(--text-primary); width:24px; }
+
+  /* ── Markdown Report ── */
+  .report-content {
+    background:var(--bg-secondary); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-1); padding:40px; line-height:1.8;
+    font-size:15px;
+  }
+  .report-content h1 { font-size:32px; font-weight:600; letter-spacing:-1.6px; margin:32px 0 16px; }
+  .report-content h2 { font-size:20px; font-weight:600; letter-spacing:-0.6px; margin:24px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border-subtle); }
+  .report-content table { margin:12px 0; }
+  .report-content code { font-family:var(--font-mono); font-size:13px; background:var(--bg-tertiary); padding:2px 6px; border-radius:3px; }
+  .report-content pre {
+    background:var(--bg-tertiary); border-radius:var(--radius-sm); padding:16px;
+    overflow-x:auto; font-family:var(--font-mono); font-size:13px;
+  }
+
+  /* ── Answer / Context Blocks ── */
+  .context-block {
+    background:var(--bg-tertiary); border-radius:var(--radius-sm);
+    padding:16px; margin:8px 0; font-size:14px; line-height:1.6;
+    border-left:3px solid var(--accent-blue);
+  }
+  .context-block.image-block { border-left-color: var(--accent-purple); }
+  .answer-block {
+    background:var(--bg-secondary); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-1); padding:24px; margin-top:16px;
+    font-size:15px; line-height:1.8; white-space:pre-wrap;
+  }
+  .citation-tag {
+    display:inline-flex; align-items:center; padding:0 6px; border-radius:3px;
+    font-size:11px; font-weight:600; font-family:var(--font-mono);
+    background:rgba(10,114,239,0.15); color:var(--accent-blue); margin:0 2px;
+  }
+  .citation-tag.image-tag { background:rgba(121,40,202,0.15); color:var(--accent-purple); }
+
+  /* ── Tabs ── */
+  .tabs { display:flex; gap:0; border-bottom:1px solid var(--border-subtle); margin-bottom:24px; }
+  .tab {
+    padding:10px 20px; font-size:14px; color:var(--text-secondary);
+    border:none; background:none; cursor:pointer; border-bottom:2px solid transparent;
+    transition:var(--transition); font-family:var(--font-sans);
+  }
+  .tab:hover { color:var(--text-primary); }
+  .tab.active { color:var(--text-primary); border-bottom-color:var(--accent-blue); }
+
+  /* ── Loading ── */
+  .loading {
+    display:inline-block; width:16px; height:16px; border-radius:50%;
+    background:var(--accent-blue); animation:pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8);} 50%{opacity:1;transform:scale(1.2);} }
+
+  /* ── Expander ── */
+  .expander {
+    border:1px solid var(--border-subtle); border-radius:var(--radius-sm);
+    margin:8px 0;
+  }
+  .expander-header {
+    padding:12px 16px; cursor:pointer; display:flex; align-items:center;
+    justify-content:space-between; font-size:14px; color:var(--text-secondary);
+    user-select:none;
+  }
+  .expander-header:hover { color:var(--text-primary); }
+  .expander-body { padding:0 16px 16px; display:none; }
+  .expander.open .expander-body { display:block; }
+
+  /* ── strategy selector pills ── */
+  .strategy-pills { display:flex; gap:8px; flex-wrap:wrap; }
+  .strategy-pill {
+    padding:6px 14px; border-radius:20px; font-size:13px; cursor:pointer;
+    border:1px solid var(--border-default); background:transparent;
+    color:var(--text-secondary); transition:var(--transition);
+    font-family:var(--font-sans);
+  }
+  .strategy-pill:hover { border-color:var(--border-strong); color:var(--text-primary); }
+  .strategy-pill.selected {
+    background:var(--accent-blue); border-color:var(--accent-blue); color:#fff;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width:768px) {
+    .sidebar { display:none; }
+    .main { margin-left:0; padding:20px; }
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .card-grid { grid-template-columns:1fr; }
+    .page-title { font-size:32px; letter-spacing:-1.2px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+// ── Minimal reactive framework ──
+const $ = (sel, ctx=document) => ctx.querySelector(sel);
+const $$ = (sel, ctx=document) => [...ctx.querySelectorAll(sel)];
+const html = (str) => { const t=document.createElement('template'); t.innerHTML=str.trim(); return t.content.firstChild; };
+
+const API = '/api/v1';
+
+// ── Toast ──
+function toast(msg, type='info') {
+  const c = $('#toast-container') || (()=>{const d=html('<div id="toast-container" class="toast-container"></div>');document.body.appendChild(d);return d;})();
+  const t = html(`<div class="toast toast-${type}">${msg}</div>`);
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.2s';setTimeout(()=>t.remove(),200);},3000);
+}
+
+// ── State ──
+const state = { page:'documents', docs:[], experiments:[], activeExp:null };
+
+// ── Render ──
+function render() {
+  const root = $('#app');
+  root.innerHTML = '';
+  root.appendChild(html(`
+    <div class="app-layout">
+      ${sidebarHTML()}
+      <main class="main" id="main-content"></main>
+      ${state.page==='experiments'&&state.activeExp?'<aside style="display:none"></aside>':''}
+    </div>
+  `));
+  const main = $('#main-content');
+  switch(state.page) {
+    case 'documents': renderDocuments(main); break;
+    case 'qa': renderQA(main); break;
+    case 'experiments': renderExperiments(main); break;
+    case 'experiment-detail': renderExperimentDetail(main); break;
+  }
+  highlightNav();
+}
+
+function sidebarHTML() {
+  const pages = [
+    {id:'documents', label:'文档管理', icon:'📄'},
+    {id:'qa', label:'多模态问答', icon:'💬'},
+    {id:'experiments', label:'实验评估', icon:'🧪'},
+  ];
+  return `
+    <nav class="sidebar">
+      <div class="sidebar-logo"><span class="icon">⚡</span>Multimodal RAG</div>
+      <div class="nav-group">
+        <div class="nav-group-label">核心功能</div>
+        ${pages.map(p=>`
+          <button class="nav-item ${state.page===p.id?'active':''}" data-page="${p.id}">
+            <span>${p.icon}</span> ${p.label}
+          </button>
+        `).join('')}
+      </div>
+      <div class="nav-footer">
+        <div style="margin-bottom:4px">Week 3 Platform v0.2.0</div>
+        <div>GLM-4V + CLIP ViT-B/32</div>
+      </div>
+    </nav>`;
+}
+
+function highlightNav() {
+  $$('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === state.page));
+}
+
+// ── Navigation ──
+document.addEventListener('click', e => {
+  const navItem = e.target.closest('.nav-item');
+  if (navItem) { state.page = navItem.dataset.page; state.activeExp=null; render(); refreshPageData(); }
+});
+
+// ── Toast Container ──
+document.body.appendChild(html('<div id="toast-container" class="toast-container"></div>'));
+
+// ── Page Data Loading ──
+async function refreshPageData() {
+  try {
+    if (state.page === 'documents') {
+      const r = await fetch(`${API}/documents`);
+      if (r.ok) state.docs = await r.json();
+      renderDocuments($('#main-content'));
+    } else if (state.page === 'experiments') {
+      const r = await fetch(`${API}/experiments`);
+      if (r.ok) { const d=await r.json(); state.experiments = d.experiments || []; }
+      renderExperiments($('#main-content'));
+    }
+  } catch(e) { /* silent */ }
+}
+
+// ═══════════════════════════════════════════
+// PAGE: Documents
+// ═══════════════════════════════════════════
+function renderDocuments(main) {
+  main.innerHTML = `
+    <h1 class="page-title">文档管理</h1>
+    <p class="page-subtitle">上传含图 PDF 文档，自动提取图片并生成 Vision LLM 摘要，建立图文联合索引。</p>
+
+    <div class="card" style="margin-bottom:32px">
+      <div class="card-title">📤 上传文档</div>
+      <div style="margin-top:16px">
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon">📁</div>
+          <div style="font-size:16px;font-weight:500;margin-bottom:4px">拖放文件到此处或点击上传</div>
+          <div style="font-size:13px;color:var(--text-secondary)">支持 PDF、DOCX、MD、TXT（最大 10MB）</div>
+          <input type="file" id="file-input" accept=".pdf,.docx,.md,.txt" style="display:none">
+        </div>
+        <div id="upload-status" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div class="section-title">已索引文档 <span style="font-weight:400;color:var(--text-secondary);font-size:14px">(${state.docs.length} 个)</span></div>
+    ${state.docs.length === 0 ? `
+      <div class="card" style="text-align:center;padding:48px">
+        <div style="font-size:40px;margin-bottom:12px">📭</div>
+        <div style="font-size:16px;color:var(--text-secondary)">还没有索引的文档</div>
+        <div style="font-size:14px;color:var(--text-tertiary);margin-top:4px">上传你的第一份文档开始构建知识库</div>
+      </div>
+    ` : `
+      <div class="card-grid">
+        ${state.docs.map(d => `
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:start">
+              <div>
+                <div class="card-title">${esc(d.filename)}</div>
+                <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">
+                  <span class="badge badge-info">${d.file_type?.toUpperCase()}</span>
+                  <span style="margin-left:8px">${d.text_chunk_count || 0} 文本 Chunks</span>
+                  ${d.image_count > 0 ? `<span style="margin-left:8px">${d.image_count} 图片</span>` : ''}
+                </div>
+              </div>
+              <button class="btn btn-danger" style="padding:4px 10px;font-size:12px" data-delete="${d.doc_id}">删除</button>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:var(--text-tertiary)">
+              ID: <span class="mono">${d.doc_id}</span> · ${d.created_at?.slice(0,19) || ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `}
+  `;
+
+  // Upload handlers
+  const zone = $('#upload-zone');
+  const input = $('#file-input');
+  zone.addEventListener('click', ()=>input.click());
+  zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('dragover')});
+  zone.addEventListener('dragleave', ()=>zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e=>{e.preventDefault();zone.classList.remove('dragover');handleUpload(e.dataTransfer.files[0])});
+  input.addEventListener('change', e=>{if(e.target.files[0]) handleUpload(e.target.files[0])});
+
+  $$('[data-delete]').forEach(b=>b.addEventListener('click', async ()=>{
+    const id = b.dataset.delete;
+    if(!confirm(`确定删除文档 ${id}？`)) return;
+    const r=await fetch(`${API}/documents/${id}`,{method:'DELETE'});
+    if(r.ok){toast('文档已删除','success');await refreshPageData();}else{toast('删除失败','error');}
+  }));
+}
+
+async function handleUpload(file) {
+  const status = $('#upload-status');
+  status.innerHTML = `<div class="loading"></div> <span style="color:var(--text-secondary);margin-left:8px">正在解析文档...</span>`;
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const r = await fetch(`${API}/documents/upload`, {method:'POST',body:fd});
+    if (r.ok) {
+      const d = await r.json();
+      status.innerHTML = `<span style="color:var(--accent-green)">✅ 上传成功！${d.text_chunk_count} 个文本 Chunks${d.image_count>0 ? ` + ${d.image_count} 张图片` : ''} 已索引</span>`;
+      toast(`文档 ${d.filename} 已成功索引`,'success');
+      await refreshPageData();
+    } else {
+      const err = await r.json();
+      status.innerHTML = `<span style="color:var(--accent-red)">❌ ${err.detail}</span>`;
+      toast(err.detail || '上传失败','error');
+    }
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--accent-red)">❌ 网络错误</span>`;
+    toast('网络请求失败','error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// PAGE: QA
+// ═══════════════════════════════════════════
+function renderQA(main) {
+  main.innerHTML = `
+    <h1 class="page-title">多模态问答</h1>
+    <p class="page-subtitle">基于图文联合检索的智能问答，自动路由 Vision LLM (GLM-4V) 或 Text LLM (GLM-4-Flash)。</p>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="form-group">
+        <label class="form-label">Prompt 策略</label>
+        <div class="strategy-pills" id="strategy-pills">
+          ${[
+            {id:'basic',label:'基础指令',desc:'直接基于上下文回答'},
+            {id:'fewshot',label:'Few-shot',desc:'2-3个高质量示例引导'},
+            {id:'cot',label:'Chain of Thought',desc:'先分析关键信息再逐步推理'},
+            {id:'multimodal_step',label:'Multimodal Step',desc:'先描述图片再结合文字'},
+          ].map(s=>`<button class="strategy-pill ${s.id==='basic'?'selected':''}" data-strategy="${s.id}" title="${s.desc}">${s.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">你的问题</label>
+        <textarea class="textarea" id="qa-question" placeholder="输入你的问题...例如：多模态RAG系统使用哪些技术进行图文检索？" style="min-height:80px"></textarea>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="btn btn-primary" id="qa-submit">🔍 检索并回答</button>
+        <div style="display:flex;gap:16px;font-size:12px;color:var(--text-secondary)">
+          <span>文本: <select class="select" id="qa-topk" style="width:60px;height:32px;display:inline">${[1,3,5,10].map(k=>`<option value="${k}" ${k===5?'selected':''}>${k}</option>`).join('')}</select></span>
+          <span>图片: <select class="select" id="qa-topm" style="width:60px;height:32px;display:inline">${[0,1,3,5].map(k=>`<option value="${k}" ${k===3?'selected':''}>${k}</option>`).join('')}</select></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="qa-result"></div>
+  `;
+
+  // Strategy pills
+  $$('#strategy-pills .strategy-pill').forEach(p=>p.addEventListener('click',()=>{
+    $$('#strategy-pills .strategy-pill').forEach(x=>x.classList.remove('selected'));
+    p.classList.add('selected');
+  }));
+
+  // Submit handler
+  $('#qa-submit').addEventListener('click', runQA);
+  $('#qa-question').addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runQA();} });
+}
+
+async function runQA() {
+  const question = $('#qa-question').value.trim();
+  if (!question) { toast('请输入问题','error'); return; }
+
+  const strategy = $('.strategy-pill.selected')?.dataset.strategy || 'basic';
+  const topK = parseInt($('#qa-topk').value);
+  const topM = parseInt($('#qa-topm').value);
+  const result = $('#qa-result');
+
+  result.innerHTML = `<div style="padding:24px;text-align:center"><span class="loading"></span> <span style="color:var(--text-secondary);margin-left:8px">检索中...</span></div>`;
+
+  try {
+    const r = await fetch(`${API}/qa/ask/sync`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question, strategy, top_k:topK, top_m:topM}),
+    });
+    if (!r.ok) { const e=await r.json(); result.innerHTML=`<div class="card card-accent" style="border-left-color:var(--accent-red)"><span style="color:var(--accent-red)">❌ ${e.detail}</span></div>`; return; }
+
+    const data = await r.json();
+    const hasImages = data.retrieved_images?.length > 0;
+    const modelUsed = data.use_vision ? 'GLM-4V (Vision)' : 'GLM-4-Flash (Text)';
+
+    result.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="section-title" style="margin-bottom:0">📋 检索结果</div>
+          <div>
+            <span class="badge ${data.use_vision?'badge-purple':'badge-info'}">${modelUsed}</span>
+            <span class="badge badge-info" style="margin-left:4px">${strategy}</span>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+          文本命中 ${data.retrieved_texts?.length||0} 条 · 图片命中 ${data.retrieved_images?.length||0} 张
+        </div>
+        ${(data.retrieved_texts||[]).map((t,i)=>`
+          <div class="context-block">
+            <span class="citation-tag">${t.ref_label||`T${i+1}`}</span>
+            <span style="font-size:12px;color:var(--text-tertiary);margin-left:6px">${t.filename} · score:${t.score?.toFixed(3)}</span>
+            <div style="margin-top:4px;font-size:14px">${esc(t.content_preview)}${(t.content_preview?.length||0)>=200?'...':''}</div>
+          </div>
+        `).join('')}
+        ${(data.retrieved_images||[]).map((img,i)=>`
+          <div class="context-block image-block">
+            <span class="citation-tag image-tag">${img.ref_label||`F${i+1}`}</span>
+            <span style="font-size:12px;color:var(--text-tertiary);margin-left:6px">score:${img.score?.toFixed(3)}</span>
+            <div style="margin-top:4px;font-size:14px">📷 ${esc(img.caption)}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="answer-block">
+        <div class="label" style="margin-bottom:8px">💡 回答</div>
+        ${esc(data.answer)}
+      </div>
+
+      ${data.text_citations?.length || data.image_citations?.length ? `
+        <div class="card" style="margin-top:16px">
+          <div class="label" style="margin-bottom:8px">📎 引用来源</div>
+          ${(data.text_citations||[]).map(c=>`
+            <div style="font-size:13px;margin:4px 0"><span class="citation-tag">${c.ref_label}</span> ${esc(c.filename)} · Chunk #${c.chunk_index}</div>
+          `).join('')}
+          ${(data.image_citations||[]).map(c=>`
+            <div style="font-size:13px;margin:4px 0"><span class="citation-tag image-tag">${c.ref_label}</span> ${esc(c.filename)} · ${esc(c.caption?.slice(0,80))}</div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+  } catch(e) {
+    result.innerHTML = `<div class="card card-accent" style="border-left-color:var(--accent-red)"><span style="color:var(--accent-red)">❌ 请求失败: ${e.message}</span></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// PAGE: Experiments
+// ═══════════════════════════════════════════
+function renderExperiments(main) {
+  main.innerHTML = `
+    <h1 class="page-title">实验评估</h1>
+    <p class="page-subtitle">创建 Prompt 策略对比实验，并发执行多组策略 × 多测试用例，自动生成 LLM-as-Judge 评估报告。</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-blue)">${state.experiments.length}</div>
+        <div class="stat-label">实验总数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-green)">${state.experiments.filter(e=>e.status==='completed').length}</div>
+        <div class="stat-label">已完成</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-amber)">${state.experiments.filter(e=>e.status==='running').length}</div>
+        <div class="stat-label">运行中</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--text-secondary)">${state.experiments.filter(e=>e.status==='created').length}</div>
+        <div class="stat-label">待执行</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div class="section-title" style="margin-bottom:0">实验列表</div>
+      <button class="btn btn-primary" onclick="showCreateExperiment()">＋ 新建实验</button>
+    </div>
+
+    ${state.experiments.length === 0 ? `
+      <div class="card" style="text-align:center;padding:48px">
+        <div style="font-size:40px;margin-bottom:12px">🧪</div>
+        <div style="font-size:16px;color:var(--text-secondary)">还没有实验记录</div>
+        <div style="font-size:14px;color:var(--text-tertiary);margin-top:4px">创建你的第一个 Prompt 策略对比实验</div>
+      </div>
+    ` : `
+      <div class="table-wrap card" style="padding:0">
+        <table>
+          <thead><tr><th>名称</th><th>策略</th><th>用例数</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody>
+            ${state.experiments.map(e=>`
+              <tr>
+                <td style="font-weight:500">${esc(e.name)}</td>
+                <td><span style="font-size:13px;color:var(--text-secondary)">${(e.strategies||[]).join(', ')}</span></td>
+                <td class="td-mono">${e.test_case_count||0}</td>
+                <td><span class="badge ${e.status==='completed'?'badge-success':e.status==='running'?'badge-running':'badge-info'}">${e.status}</span></td>
+                <td style="font-size:13px;color:var(--text-secondary)">${(e.created_at||'').slice(0,19)}</td>
+                <td>
+                  <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px" data-view="${e.experiment_id}">查看</button>
+                  ${e.status==='created'?`<button class="btn btn-primary" style="padding:4px 8px;font-size:12px;margin-left:4px" data-run="${e.experiment_id}">运行</button>`:''}
+                  <button class="btn btn-danger" style="padding:4px 8px;font-size:12px;margin-left:4px" data-del="${e.experiment_id}">删除</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `}
+
+    <!-- Create Experiment Modal -->
+    <div id="create-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:center;justify-content:center">
+      <div class="card" style="width:680px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-3)">
+        <div class="section-title">新建 Prompt 策略对比实验</div>
+        <div class="form-group">
+          <label class="form-label">实验名称</label>
+          <input class="input" id="exp-name" placeholder="例如：多模态 Prompt 策略对比 v1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prompt 策略（可多选）</label>
+          <div class="strategy-pills" id="exp-strategies">
+            ${[
+              {id:'basic',label:'Basic 基础指令'},
+              {id:'fewshot',label:'Few-shot'},
+              {id:'cot',label:'CoT 思维链'},
+              {id:'multimodal_step',label:'Multimodal Step'},
+            ].map(s=>`<button class="strategy-pill ${s.id==='basic'?'selected':''}" data-sid="${s.id}">${s.label}</button>`).join('')}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">测试用例（每行一个，格式：问题 || 参考答案）</label>
+          <textarea class="textarea" id="exp-testcases" style="min-height:160px" placeholder="Transformer架构的核心创新是什么？ || Transformer的核心创新是自注意力机制。&#10;反向传播算法是谁提出的？ || 反向传播算法由Rumelhart等人在1986年提出。"></textarea>
+          <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">提示：可以用 ChatGPT 从你的文档中批量生成测试用例</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">并发限制</label>
+          <select class="select" id="exp-concurrency" style="width:120px">
+            ${[1,2,3,5,8,10].map(c=>`<option value="${c}" ${c===5?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-secondary" onclick="document.getElementById('create-modal').style.display='none'">取消</button>
+          <button class="btn btn-primary" id="exp-create-btn">创建实验</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Event handlers
+  $$('[data-view]').forEach(b=>b.addEventListener('click',()=>{state.activeExp=b.dataset.view;state.page='experiment-detail';render();loadExperimentDetail(b.dataset.view);}));
+  $$('[data-run]').forEach(b=>b.addEventListener('click',()=>runExperiment(b.dataset.run)));
+  $$('[data-del]').forEach(b=>b.addEventListener('click',async ()=>{
+    const id=b.dataset.del;
+    if(!confirm('确定删除此实验？'))return;
+    const r=await fetch(`${API}/experiments/${id}`,{method:'DELETE'});
+    if(r.ok){toast('实验已删除','success');await refreshPageData();}
+  }));
+
+  // Strategy pills in modal
+  $$('#exp-strategies .strategy-pill').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('selected')));
+
+  // Create button
+  $('#exp-create-btn').addEventListener('click', createExperiment);
+}
+
+function showCreateExperiment() {
+  const modal = document.getElementById('create-modal');
+  if (modal) { modal.style.display='flex'; return; }
+  // Re-render with modal
+  state.page = 'experiments';
+  render();
+  setTimeout(()=>{
+    const m = document.getElementById('create-modal');
+    if (m) m.style.display = 'flex';
+    // Re-bind
+    $$('#exp-strategies .strategy-pill').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('selected')));
+    $('#exp-create-btn').addEventListener('click', createExperiment);
+  },100);
+}
+window.showCreateExperiment = showCreateExperiment;
+
+async function createExperiment() {
+  const name = $('#exp-name').value.trim();
+  const strategies = [...$$('#exp-strategies .strategy-pill.selected')].map(p=>p.dataset.sid);
+  const raw = $('#exp-testcases').value.trim();
+  const concurrency = parseInt($('#exp-concurrency').value);
+
+  if (!name) { toast('请输入实验名称','error'); return; }
+  if (strategies.length===0) { toast('请至少选择一个策略','error'); return; }
+  if (!raw) { toast('请添加测试用例','error'); return; }
+
+  const testCases = raw.split('\n').filter(l=>l.trim()).map(line=>{
+    const parts = line.split('||');
+    return {
+      question: (parts[0]||'').trim(),
+      reference_answer: (parts[1]||'').trim(),
+      has_image: (parts[2]||'').trim().toLowerCase() === 'true',
+    };
+  }).filter(tc=>tc.question && tc.reference_answer);
+
+  if (testCases.length===0) { toast('无法解析测试用例','error'); return; }
+
+  const r = await fetch(`${API}/experiments`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name, prompt_strategies:strategies, test_cases:testCases, concurrency_limit:concurrency}),
+  });
+  if (r.ok) {
+    toast(`实验创建成功，${testCases.length} 条用例`,'success');
+    document.getElementById('create-modal').style.display = 'none';
+    await refreshPageData();
+  } else {
+    const e = await r.json();
+    toast(e.detail||'创建失败','error');
+  }
+}
+
+async function runExperiment(id) {
+  toast('实验开始执行...','info');
+  const r = await fetch(`${API}/experiments/${id}/run`, {method:'POST'});
+  if (r.ok) {
+    const d = await r.json();
+    toast(`实验完成！${d.total_results} 条结果，耗时 ${d.duration_seconds}s`,'success');
+    await refreshPageData();
+  } else {
+    const e = await r.json();
+    toast(e.detail||'执行失败','error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// PAGE: Experiment Detail + Report
+// ═══════════════════════════════════════════
+async function loadExperimentDetail(id) {
+  const r = await fetch(`${API}/experiments/${id}`);
+  if (!r.ok) return;
+  const data = await r.json();
+  state.activeExpData = data;
+  renderExperimentDetail($('#main-content'));
+}
+
+function renderExperimentDetail(main) {
+  const data = state.activeExpData;
+  if (!data) { main.innerHTML='<div class="card">加载失败</div>'; return; }
+
+  const strategies = data.prompt_strategies||[];
+  const dimNames = {factual_accuracy:'事实准确性',image_relevance:'图文关联度',completeness:'完整性',conciseness:'简洁性',total_score:'加权总分'};
+
+  // Compute strategy averages
+  const strategyStats = {};
+  for (const s of strategies) {
+    const sResults = (data.results||[]).filter(r=>r.strategy_name===s && r.judge_result);
+    if (sResults.length===0) continue;
+    const dims = ['factual_accuracy','image_relevance','completeness','conciseness','total_score'];
+    const avgs = {};
+    for (const d of dims) avgs[d] = sResults.reduce((sum,r)=>sum+(r.judge_result[d]||0),0)/sResults.length;
+    strategyStats[s] = {avgs, count: sResults.length};
+  }
+
+  const ranked = Object.entries(strategyStats).sort((a,b)=>b[1].avgs.total_score-a[1].avgs.total_score);
+
+  main.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+      <button class="btn btn-ghost" id="exp-back-btn">← 返回</button>
+      <h1 class="page-title" style="font-size:32px;letter-spacing:-1.2px;margin-bottom:0">${esc(data.name)}</h1>
+      <span class="badge ${data.status==='completed'?'badge-success':data.status==='running'?'badge-running':'badge-info'}">${data.status}</span>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-blue)">${strategies.length}</div>
+        <div class="stat-label">Prompt 策略</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-purple)">${data.test_case_count||0}</div>
+        <div class="stat-label">测试用例</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-green)">${(data.results||[]).length}</div>
+        <div class="stat-label">总运行结果</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--text-secondary)">${data.total_duration_seconds||0}s</div>
+        <div class="stat-label">总耗时</div>
+      </div>
+    </div>
+
+    ${data.status==='completed' ? `
+      <!-- Score Rankings -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">🏆 各维度得分排名</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>排名</th><th>策略</th>${['factual_accuracy','image_relevance','completeness','conciseness','total_score'].map(d=>`<th>${dimNames[d]}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${ranked.map(([s,stats],i)=>{
+                const medals = ['🥇','🥈','🥉',''];
+                return `<tr>
+                  <td>${medals[i]||(i+1)}</td>
+                  <td style="font-weight:600">${s}</td>
+                  ${['factual_accuracy','image_relevance','completeness','conciseness','total_score'].map(d=>{
+                    const v = stats.avgs[d];
+                    const color = v>=4?'var(--accent-green)':v>=3?'var(--accent-amber)':'var(--accent-red)';
+                    return `<td class="td-mono"><span style="color:${color}">${v.toFixed(2)}</span></td>`;
+                  }).join('')}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:12px;color:var(--text-tertiary);margin-top:8px">
+          加权总分 = 事实准确性×0.35 + 图文关联度×0.25 + 完整性×0.25 + 简洁性×0.15
+        </div>
+      </div>
+
+      <!-- Cost Comparison -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-title">💰 Token 消耗与成本对比</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>策略</th><th>总调用</th><th>总 Token</th><th>输入 Token</th><th>输出 Token</th><th>总成本 (¥)</th><th>均次成本 (¥)</th></tr></thead>
+            <tbody>
+              ${strategies.map(s=>{
+                const cr = (data.strategy_cost_reports||{})[s];
+                if (!cr) return `<tr><td>${s}</td><td colspan="6" style="color:var(--text-tertiary)">暂无数据</td></tr>`;
+                return `<tr>
+                  <td style="font-weight:500">${s}</td>
+                  <td class="td-mono">${cr.total_calls}</td>
+                  <td class="td-mono">${cr.total_tokens?.toLocaleString()}</td>
+                  <td class="td-mono">${cr.total_input_tokens?.toLocaleString()}</td>
+                  <td class="td-mono">${cr.total_completion_tokens?.toLocaleString()}</td>
+                  <td class="td-mono">¥${cr.total_cost?.toFixed(4)}</td>
+                  <td class="td-mono">¥${cr.avg_cost_per_call?.toFixed(4)}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Best & Worst -->
+      ${(()=>{
+        const scored = (data.results||[]).filter(r=>r.judge_result&&!r.error).sort((a,b)=>b.judge_result.total_score-a.judge_result.total_score);
+        if (scored.length===0) return '';
+        const best = scored[0], worst = scored[scored.length-1];
+        return `
+          <div class="card-grid" style="margin-bottom:16px">
+            <div class="card" style="border-left:3px solid var(--accent-green)">
+              <div class="label" style="color:var(--accent-green)">🌟 最佳回答</div>
+              <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">策略: ${best.strategy_name} · 总分: ${best.judge_result.total_score?.toFixed(2)}</div>
+              <div style="margin-top:8px;font-size:14px;color:var(--text-primary);max-height:200px;overflow-y:auto;white-space:pre-wrap">${esc(best.answer?.slice(0,500))}</div>
+              <div class="score-bar-wrap" style="margin-top:8px">${renderScoreBars(best.judge_result)}</div>
+            </div>
+            <div class="card" style="border-left:3px solid var(--accent-red)">
+              <div class="label" style="color:var(--accent-red)">⚠️ 最差回答</div>
+              <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">策略: ${worst.strategy_name} · 总分: ${worst.judge_result.total_score?.toFixed(2)}</div>
+              <div style="margin-top:8px;font-size:14px;color:var(--text-primary);max-height:200px;overflow-y:auto;white-space:pre-wrap">${esc(worst.answer?.slice(0,500))}</div>
+              <div class="score-bar-wrap" style="margin-top:8px">${renderScoreBars(worst.judge_result)}</div>
+            </div>
+          </div>
+        `;
+      })()}
+
+      <!-- Full Report -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="section-title" style="margin-bottom:0">📊 完整对比报告</div>
+          <button class="btn btn-primary" id="load-report-btn">生成 Markdown 报告</button>
+        </div>
+        <div id="report-container"></div>
+      </div>
+    ` : `
+      <div class="card" style="text-align:center;padding:48px">
+        ${data.status==='running' ? `
+          <div style="font-size:40px;margin-bottom:12px">⏳</div>
+          <div style="font-size:16px;color:var(--text-secondary)">实验正在执行中，请稍候...</div>
+          <button class="btn btn-ghost" style="margin-top:16px" id="exp-refresh-btn">🔄 刷新状态</button>
+        ` : data.status==='failed' ? `
+          <div style="font-size:40px;margin-bottom:12px">❌</div>
+          <div style="font-size:16px;color:var(--accent-red)">实验执行失败</div>
+          ${(data.results||[]).filter(r=>r.error).length>0?`<div style="font-size:13px;color:var(--text-tertiary);margin-top:8px;max-height:120px;overflow:auto;text-align:left">${esc((data.results||[]).filter(r=>r.error).map(r=>`${r.strategy_name}: ${r.error}`).join('<br>'))}</div>`:''}
+          <button class="btn btn-primary" style="margin-top:16px" id="exp-rerun-btn">▶ 重新执行实验</button>
+        ` : `
+          <div style="font-size:40px;margin-bottom:12px">⏳</div>
+          <div style="font-size:16px;color:var(--text-secondary)">实验尚未执行</div>
+          <button class="btn btn-primary" style="margin-top:16px" id="exp-run-btn">▶ 开始执行实验</button>
+        `}
+      </div>
+    `}
+
+    <!-- All Results -->
+    ${(data.results||[]).length>0 ? `
+      <div class="section-title" style="margin-top:24px">详细结果 (${data.results.length} 条)</div>
+      ${(data.results||[]).map((r,i)=>`
+        <div class="expander ${i<3?'open':''}" id="exp-${i}">
+          <div class="expander-header" onclick="this.parentElement.classList.toggle('open')">
+            <span><span class="badge badge-info">${r.strategy_name}</span> ${esc(r.question?.slice(0,60))}${(r.question?.length||0)>60?'...':''}</span>
+            <span>${r.judge_result?`总分: ${r.judge_result.total_score?.toFixed(2)}`:(r.error?`❌ ${r.error}`:'⏳')}</span>
+          </div>
+          <div class="expander-body">
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">⏱ ${r.latency_seconds}s · Tokens: ${r.token_breakdown?.total_tokens||0} · Vision: ${r.use_vision?'是':'否'}</div>
+            <div style="background:var(--bg-tertiary);padding:12px;border-radius:var(--radius-sm);font-size:14px;white-space:pre-wrap;max-height:300px;overflow-y:auto">${esc(r.answer)}</div>
+            ${r.judge_result?`<div class="score-bar-wrap" style="margin-top:8px">${renderScoreBars(r.judge_result)}</div>`:''}
+          </div>
+        </div>
+      `).join('')}
+    ` : ''}
+  `;
+
+  // Report button
+  const reportBtn = $('#load-report-btn');
+  if (reportBtn) reportBtn.addEventListener('click', async ()=>{
+    const container = $('#report-container');
+    container.innerHTML = '<span class="loading"></span> 正在生成报告...';
+    const rr = await fetch(`${API}/experiments/${data.experiment_id}/report`);
+    if (rr.ok) {
+      const rd = await rr.json();
+      container.innerHTML = `<div class="report-content">${markedToHTML(rd.report)}</div>`;
+    } else {
+      container.innerHTML = '<span style="color:var(--accent-red)">报告生成失败</span>';
+    }
+  });
+
+  // Back button
+  const backBtn = $('#exp-back-btn');
+  if (backBtn) backBtn.addEventListener('click', () => {
+    state.page = 'experiments';
+    state.activeExp = null;
+    render();
+    refreshPageData();
+  });
+
+  // Action buttons (run / rerun / refresh)
+  const expId = data.experiment_id;
+  $('#exp-run-btn')?.addEventListener('click', async () => {
+    await runExperiment(expId);
+    await loadExperimentDetail(expId);
+  });
+  $('#exp-rerun-btn')?.addEventListener('click', async () => {
+    await runExperiment(expId);
+    await loadExperimentDetail(expId);
+  });
+  $('#exp-refresh-btn')?.addEventListener('click', () => {
+    loadExperimentDetail(expId);
+  });
+}
+
+function renderScoreBars(judge) {
+  if (!judge) return '';
+  const dims = [
+    {key:'factual_accuracy',label:'事实准确性',color:'var(--accent-blue)'},
+    {key:'image_relevance',label:'图文关联度',color:'var(--accent-purple)'},
+    {key:'completeness',label:'完整性',color:'var(--accent-green)'},
+    {key:'conciseness',label:'简洁性',color:'var(--accent-amber)'},
+  ];
+  return dims.map(d=>`
+    <div class="score-bar-wrap">
+      <span class="score-bar-label">${d.label}</span>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${(judge[d.key]||0)*20}%;background:${d.color}"></div></div>
+      <span class="score-bar-val">${judge[d.key]}</span>
+    </div>
+  `).join('');
+}
+
+// ── Simple Markdown to HTML ──
+function markedToHTML(md) {
+  let h = esc(md);
+  // Headers
+  h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  // Bold / italic
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Code blocks
+  h = h.replace(/```[\s\S]*?```/g, m=>`<pre>${m.slice(3,-3)}</pre>`);
+  // Inline code
+  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Tables
+  h = h.replace(/\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)*)/g, (_,header,rows)=>{
+    const hcells = header.split('|').filter(c=>c.trim()).map(c=>`<th>${c.trim()}</th>`).join('');
+    const rrows = rows.trim().split('\n').map(r=>{
+      const cells = r.split('|').filter(c=>c.trim()).map(c=>`<td>${c.trim()}</td>`).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+    return `<div class="table-wrap"><table><thead><tr>${hcells}</tr></thead><tbody>${rrows}</tbody></table></div>`;
+  });
+  // Blockquotes
+  h = h.replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid var(--accent-blue);padding-left:16px;color:var(--text-secondary);margin:8px 0">$1</blockquote>');
+  // Horizontal rules
+  h = h.replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border-subtle);margin:24px 0">');
+  // Line breaks
+  h = h.replace(/\n\n/g, '<br><br>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+
+// ── Utility ──
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──
+render();
+refreshPageData();
+</script>
+</body>
+</html>
