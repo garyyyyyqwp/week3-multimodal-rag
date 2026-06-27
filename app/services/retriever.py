@@ -50,11 +50,10 @@ def _load_image_base64(file_path: str) -> str:
     import io
     from PIL import Image
     buf = io.BytesIO()
-    pil_img = Image.open(file_path)
-    if pil_img.mode in ("RGBA", "P"):
-        pil_img = pil_img.convert("RGB")
-    pil_img.save(buf, format="JPEG", quality=85)
-    pil_img.close()
+    with Image.open(file_path) as pil_img:
+        if pil_img.mode in ("RGBA", "P"):
+            pil_img = pil_img.convert("RGB")
+        pil_img.save(buf, format="JPEG", quality=85)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 
@@ -79,7 +78,7 @@ async def retrieve_multimodal(
         reference markers ([T1], [T2], ..., [F1], [F2], ...).
     """
     if store is None:
-        store = get_vector_store()
+        store = await get_vector_store()
 
     results = await store.search_multimodal(query, top_k=top_k, top_m=top_m)
 

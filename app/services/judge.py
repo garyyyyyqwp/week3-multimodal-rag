@@ -8,10 +8,18 @@ Evaluates RAG answers across:
   4. conciseness       (1-5): 是否包含无关或冗余内容
 
 Each dimension uses a strict Pydantic Schema enforced via function calling.
+
+Rate-limit resilience:
+  - `judge_answer` wraps the LLM call with exponential backoff (max 3 retries).
+  - `judge_batch` uses asyncio.Semaphore for concurrency control so that even
+    when dozens of items are submitted, only `concurrency` calls run at once.
 """
 
 import json
 import asyncio
+import logging
+import random
+import time
 from dataclasses import dataclass, field
 
 from pydantic import BaseModel, Field
@@ -64,6 +72,82 @@ class JudgeResult:
             self.conciseness * 0.15,
             2,
         )
+
+
+# ---------------------------------------------------------------------------
+# Exponential backoff retry helper
+# ---------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
+
+# Retryable HTTP status codes: rate-limit and transient server errors
+_RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+
+MAX_RETRIES = 3
+BASE_DELAY = 1.0     # seconds
+MAX_DELAY = 30.0     # seconds
+
+
+class JudgeRetryError(Exception):
+    """Raised when a judge call exhausts all retries."""
+
+
+async def _retry_judge_call(
+    client,
+    model: str,
+    messages: list[dict],
+    tools: list[dict],
+    tool_choice: dict,
+    temperature: float,
+):
+    """Call the LLM judge with exponential-backoff retries on rate-limit / 5xx.
+
+    Retries up to MAX_RETRIES with jitter: delay = min(BASE_DELAY * 2^attempt, MAX_DELAY).
+    """
+    last_exc = None
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                tools=tools,
+                tool_choice=tool_choice,
+                temperature=temperature,
+            )
+            return response
+        except Exception as exc:
+            last_exc = exc
+            status = getattr(exc, "status_code", None)
+            http_status = getattr(exc, "http_status", None)
+            code = status or http_status
+
+            # Only retry on rate-limit or transient server errors
+            if code is not None and code not in _RETRYABLE_STATUS:
+                raise
+
+            if attempt >= MAX_RETRIES:
+                logger.error(
+                    "Judge call failed after %d retries (status=%s): %s",
+                    MAX_RETRIES + 1, code, exc,
+                )
+                raise JudgeRetryError(
+                    f"Judge API 调用失败 (已重试 {MAX_RETRIES + 1} 次): {exc}"
+                ) from exc
+
+            # Exponential backoff with jitter
+            delay = min(BASE_DELAY * (2 ** attempt), MAX_DELAY)
+            jitter = random.uniform(0, delay * 0.5)
+            total_delay = delay + jitter
+            logger.warning(
+                "Judge call got status=%s, retrying in %.1fs (attempt %d/%d)",
+                code, total_delay, attempt + 1, MAX_RETRIES,
+            )
+            await asyncio.sleep(total_delay)
+
+    # Shouldn't reach here, but guard
+    raise JudgeRetryError(
+        f"Judge API 调用失败: {last_exc}"
+    ) from last_exc
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +270,8 @@ async def judge_answer(
     }]
 
     try:
-        response = await client.chat.completions.create(
+        response = await _retry_judge_call(
+            client=client,
             model=llm_model,
             messages=[
                 {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
@@ -194,7 +279,7 @@ async def judge_answer(
             ],
             tools=tools,
             tool_choice={"type": "function", "function": {"name": "submit_evaluation"}},
-            temperature=0.1,  # low temp for consistent judging
+            temperature=0.1,
         )
 
         # Extract tool call arguments
@@ -217,6 +302,16 @@ async def judge_answer(
             completeness=1,
             conciseness=1,
             reasoning=f"评分解析失败: {str(e)[:100]}",
+        )
+    except JudgeRetryError as e:
+        # Exhausted all retries — return minimum scores so the experiment can continue
+        logger.error("Judge call failed after all retries: %s", e)
+        return JudgeResult(
+            factual_accuracy=1,
+            image_relevance=1,
+            completeness=1,
+            conciseness=1,
+            reasoning=f"评分 API 调用失败 (已耗尽重试): {str(e)[:150]}",
         )
 
 

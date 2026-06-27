@@ -15,6 +15,7 @@ Image collection schema:
   - metadata: {doc_id, image_id, file_path, caption, page_num, chunk_type="image", ...}
 """
 
+import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -400,10 +401,14 @@ class VectorStore:
 # ------------------------------------------------------------------
 
 _store: VectorStore | None = None
+_store_lock = asyncio.Lock()
 
 
-def get_vector_store() -> VectorStore:
+async def get_vector_store() -> VectorStore:
     global _store
-    if _store is None:
-        _store = VectorStore()
-    return _store
+    if _store is not None:
+        return _store
+    async with _store_lock:
+        if _store is None:
+            _store = VectorStore()
+        return _store

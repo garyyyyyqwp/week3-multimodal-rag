@@ -228,6 +228,8 @@ async def run_experiment(experiment_id: str) -> Experiment:
     if exp is None:
         raise ValueError(f"实验不存在: {experiment_id}")
 
+    # Status may already be "running" if set atomically by the route layer.
+    # This idempotent write is harmless and ensures direct callers also work.
     exp.status = "running"
     _save_experiment(exp)
 

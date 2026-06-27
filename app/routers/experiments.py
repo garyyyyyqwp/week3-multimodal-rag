@@ -192,8 +192,10 @@ async def execute_experiment(experiment_id: str):
     if exp.status == "running":
         raise HTTPException(status_code=409, detail="实验正在运行中")
 
-    # Reset status for re-run (failed or created)
-    exp.status = "created"
+    # Atomically set status to "running" BEFORE execution.
+    # This closes the race-condition window: if a second request arrives
+    # before run_experiment acquires the lock, it now sees "running" → 409.
+    exp.status = "running"
     exp.results = []
     _save_experiment(exp)
 
