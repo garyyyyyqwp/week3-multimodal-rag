@@ -84,7 +84,7 @@ async def upload_document(file: UploadFile = File(...)):
             image_count = len(parsed.images)
 
     # Store in ChromaDB
-    store = get_vector_store()
+    store = await get_vector_store()
 
     try:
         # Store text chunks
@@ -135,7 +135,7 @@ async def upload_document(file: UploadFile = File(...)):
 @router.get("", response_model=list[DocumentInfo])
 async def list_documents():
     """List all indexed documents with chunk counts (text + image)."""
-    store = get_vector_store()
+    store = await get_vector_store()
     try:
         docs = store.list_documents()
     except VectorStoreError as e:
@@ -162,7 +162,7 @@ async def list_documents():
 )
 async def get_document_images(doc_id: str):
     """Get all images extracted from a document."""
-    store = get_vector_store()
+    store = await get_vector_store()
 
     if not store.doc_exists(doc_id):
         raise HTTPException(status_code=404, detail=f"文档不存在: {doc_id}")
@@ -191,7 +191,7 @@ async def get_document_images(doc_id: str):
 )
 async def delete_document(doc_id: str):
     """Delete a document and all its text + image chunks."""
-    store = get_vector_store()
+    store = await get_vector_store()
 
     if not store.doc_exists(doc_id):
         raise HTTPException(status_code=404, detail=f"文档不存在: {doc_id}")

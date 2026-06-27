@@ -9,6 +9,7 @@ Key additions:
 """
 
 from dataclasses import dataclass, field
+import logging
 from typing import AsyncIterator, Optional
 
 from app.services.llm import get_client, get_model, get_vision_client, get_vision_model
@@ -20,6 +21,8 @@ from app.services.retriever import (
     MultimodalRetrievalResult,
 )
 from app.utils.config import RAG_TOP_K, RAG_TOP_M
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -200,25 +203,37 @@ async def generate_answer_stream(
                     "image_url": {"url": f"data:image/jpeg;base64,{img.image_base64}"},
                 })
 
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": content_parts}],
-            stream=True,
-        )
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": content_parts}],
+                stream=True,
+            )
+        except Exception as e:
+            logger.error("Vision LLM API call failed: %s", e)
+            raise
     else:
         # Text LLM mode
         client = get_client()
         model = get_model()
 
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            stream=True,
-        )
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                stream=True,
+            )
+        except Exception as e:
+            logger.error("Text LLM API call failed: %s", e)
+            raise
 
-    async for chunk in response:
-        if chunk.choices and chunk.choices[0].delta.content is not None:
-            yield chunk.choices[0].delta.content
+    try:
+        async for chunk in response:
+            if chunk.choices and chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        logger.error("Error while streaming LLM response: %s", e)
+        raise
 
 
 async def generate_bare_answer_stream(question: str) -> AsyncIterator[str]:
@@ -226,15 +241,23 @@ async def generate_bare_answer_stream(question: str) -> AsyncIterator[str]:
     client = get_client()
     model = get_model()
 
-    response = await client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": question}],
-        stream=True,
-    )
+    try:
+        response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": question}],
+            stream=True,
+        )
+    except Exception as e:
+        logger.error("Bare answer LLM API call failed: %s", e)
+        raise
 
-    async for chunk in response:
-        if chunk.choices and chunk.choices[0].delta.content is not None:
-            yield chunk.choices[0].delta.content
+    try:
+        async for chunk in response:
+            if chunk.choices and chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        logger.error("Error while streaming bare answer response: %s", e)
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -280,10 +303,14 @@ async def rag_pipeline(
 
     # Collect answer
     answer_parts = []
-    async for token in generate_answer_stream(
-        question, retrieval, strategy=strategy, use_vision=use_vision,
-    ):
-        answer_parts.append(token)
+    try:
+        async for token in generate_answer_stream(
+            question, retrieval, strategy=strategy, use_vision=use_vision,
+        ):
+            answer_parts.append(token)
+    except Exception as e:
+        logger.error("RAG pipeline answer generation failed: %s", e)
+        raise
     answer = "".join(answer_parts)
 
     return PipelineResult(

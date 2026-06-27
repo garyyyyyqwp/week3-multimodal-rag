@@ -57,7 +57,7 @@ def setup_test_env(monkeypatch):
     import app.services.vector_store as vs
     vs._store = None
 
-    def _get_vector_store():
+    async def _get_vector_store():
         if vs._store is not None:
             return vs._store
         store = vs.VectorStore(

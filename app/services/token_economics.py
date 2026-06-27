@@ -10,9 +10,15 @@ Handles:
 
 from dataclasses import dataclass, field
 
-import tiktoken
+_ENC = None
 
-ENC = tiktoken.get_encoding("cl100k_base")
+
+def _get_encoder():
+    global _ENC
+    if _ENC is None:
+        import tiktoken
+        _ENC = tiktoken.get_encoding("cl100k_base")
+    return _ENC
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +81,7 @@ def count_tokens(text: str) -> int:
     """Count tokens in a text string using tiktoken."""
     if not text:
         return 0
-    return len(ENC.encode(text))
+    return len(_get_encoder().encode(text))
 
 
 def count_message_tokens(messages: list[dict]) -> int:
